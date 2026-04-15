@@ -1,0 +1,416 @@
+{
+  "name": "ai-image-generator",
+  "version": "1.0.0",
+  "description": "AI 图像生成服务 - 支持文生图和图生图功能",
+  "base_url": "http://192.168.20.202:10018",
+  "auth": {
+    "type": "none"
+  },
+  "skills": [
+    {
+      "name": "text2image",
+      "description": "根据文字描述生成图片。用户可以指定正向提示词、反向提示词、图片尺寸、迭代步数、CFG Scale、随机种子和生成数量。",
+      "endpoint": "/api/text2image",
+      "method": "POST",
+      "content_type": "application/json",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "正向提示词，描述想要生成的图片内容",
+            "required": true
+          },
+          "negative_prompt": {
+            "type": "string",
+            "description": "反向提示词，描述不想要出现的内容",
+            "default": ""
+          },
+          "width": {
+            "type": "integer",
+            "description": "图片宽度，范围 512-2048",
+            "default": 1024,
+            "minimum": 512,
+            "maximum": 2048
+          },
+          "height": {
+            "type": "integer",
+            "description": "图片高度，范围 512-2048",
+            "default": 1024,
+            "minimum": 512,
+            "maximum": 2048
+          },
+          "steps": {
+            "type": "integer",
+            "description": "迭代步数，范围 1-100",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "guidance_scale": {
+            "type": "number",
+            "description": "CFG Scale，范围 1.0-20.0",
+            "default": 4.5,
+            "minimum": 1.0,
+            "maximum": 20.0
+          },
+          "seed": {
+            "type": "integer",
+            "description": "随机种子，0 表示随机生成",
+            "default": 0,
+            "minimum": 0
+          },
+          "num_images": {
+            "type": "integer",
+            "description": "一次生成图片数量，范围 1-4",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 4
+          }
+        },
+        "required": ["prompt"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "是否成功"
+          },
+          "task_id": {
+            "type": "string",
+            "description": "任务 ID，用于查询任务状态和获取结果"
+          },
+          "status": {
+            "type": "string",
+            "description": "任务状态：pending, processing, completed, failed"
+          },
+          "message": {
+            "type": "string",
+            "description": "提示信息"
+          }
+        }
+      },
+      "examples": [
+        {
+          "prompt": "一只可爱的白色小猫，樱花树下，高清治愈",
+          "width": 1024,
+          "height": 1024,
+          "steps": 20,
+          "num_images": 2
+        }
+      ]
+    },
+    {
+      "name": "image2image",
+      "description": "基于参考图片和文字描述生成新图片。用户需要上传参考图片并提供描述。",
+      "endpoint": "/api/image2image",
+      "method": "POST",
+      "content_type": "multipart/form-data",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "正向提示词，描述想要的效果",
+            "required": true
+          },
+          "negative_prompt": {
+            "type": "string",
+            "description": "反向提示词，描述不想要的内容",
+            "default": ""
+          },
+          "steps": {
+            "type": "integer",
+            "description": "迭代步数，范围 1-100",
+            "default": 50,
+            "minimum": 1,
+            "maximum": 100
+          },
+          "guidance_scale": {
+            "type": "number",
+            "description": "CFG Scale，范围 1.0-20.0",
+            "default": 4.5,
+            "minimum": 1.0,
+            "maximum": 20.0
+          },
+          "seed": {
+            "type": "integer",
+            "description": "随机种子，0 表示随机生成",
+            "default": 0,
+            "minimum": 0
+          },
+          "num_images": {
+            "type": "integer",
+            "description": "一次生成图片数量，范围 1-4",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 4
+          },
+          "image": {
+            "type": "file",
+            "description": "参考图片文件，支持 JPG、PNG 格式，最大 10MB",
+            "required": true
+          }
+        },
+        "required": ["prompt", "image"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "是否成功"
+          },
+          "task_id": {
+            "type": "string",
+            "description": "任务 ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "任务状态"
+          },
+          "message": {
+            "type": "string",
+            "description": "提示信息"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_task_status",
+      "description": "获取任务状态和结果。提交生成任务后，使用此接口查询任务进度和结果。",
+      "endpoint": "/api/tasks/{task_id}",
+      "method": "GET",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "任务 ID",
+            "required": true,
+            "in": "path"
+          }
+        },
+        "required": ["task_id"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "任务 ID"
+          },
+          "type": {
+            "type": "string",
+            "description": "任务类型：text2image 或 image2image"
+          },
+          "status": {
+            "type": "string",
+            "description": "任务状态：pending(等待中), processing(处理中), completed(已完成), failed(失败), cancelled(已取消)"
+          },
+          "progress": {
+            "type": "integer",
+            "description": "进度百分比 0-100"
+          },
+          "result_url": {
+            "type": "string",
+            "description": "结果图片 URL（第一张）"
+          },
+          "result_urls": {
+            "type": "array",
+            "description": "所有结果图片 URL 列表",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error_message": {
+            "type": "string",
+            "description": "错误信息（失败时）"
+          }
+        }
+      }
+    },
+    {
+      "name": "cancel_task",
+      "description": "取消正在等待或处理中的任务。",
+      "endpoint": "/api/tasks/{task_id}/cancel",
+      "method": "POST",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "任务 ID",
+            "required": true,
+            "in": "path"
+          }
+        },
+        "required": ["task_id"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "是否成功"
+          },
+          "message": {
+            "type": "string",
+            "description": "提示信息"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_queue_status",
+      "description": "获取队列状态，包括等待中、处理中、已完成、失败的任务数量。",
+      "endpoint": "/api/queue/status",
+      "method": "GET",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "max_size": {
+            "type": "integer",
+            "description": "队列最大容量"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "等待中的任务数"
+          },
+          "processing": {
+            "type": "integer",
+            "description": "处理中的任务数"
+          },
+          "completed": {
+            "type": "integer",
+            "description": "已完成的任务数"
+          },
+          "failed": {
+            "type": "integer",
+            "description": "失败的任务数"
+          },
+          "available_slots": {
+            "type": "integer",
+            "description": "可用槽位数"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_recent_tasks",
+      "description": "获取最近的任务列表。",
+      "endpoint": "/api/tasks",
+      "method": "GET",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "返回的任务数量限制",
+            "default": 20,
+            "in": "query"
+          }
+        }
+      },
+      "response": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "任务 ID"
+            },
+            "type": {
+              "type": "string",
+              "description": "任务类型"
+            },
+            "status": {
+              "type": "string",
+              "description": "任务状态"
+            },
+            "progress": {
+              "type": "integer",
+              "description": "进度"
+            },
+            "result_url": {
+              "type": "string",
+              "description": "结果图片 URL"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "get_image",
+      "description": "获取生成的图片。任务完成后，使用此接口下载图片。",
+      "endpoint": "/api/images/{task_id}",
+      "method": "GET",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "任务 ID",
+            "required": true,
+            "in": "path"
+          },
+          "index": {
+            "type": "integer",
+            "description": "图片索引（生成多张时使用），从 0 开始",
+            "default": 0,
+            "in": "query"
+          }
+        },
+        "required": ["task_id"]
+      },
+      "response": {
+        "type": "file",
+        "description": "图片文件"
+      }
+    }
+  ],
+  "workflows": [
+    {
+      "name": "generate_and_wait",
+      "description": "生成图片并等待完成，返回图片 URL",
+      "steps": [
+        {
+          "action": "text2image",
+          "params": {
+            "prompt": "${prompt}",
+            "negative_prompt": "${negative_prompt}",
+            "width": "${width}",
+            "height": "${height}",
+            "num_images": "${num_images}"
+          },
+          "save_as": "task_result"
+        },
+        {
+          "action": "poll",
+          "condition": "task_result.status != 'completed' && task_result.status != 'failed'",
+          "interval_ms": 2000,
+          "max_attempts": 300,
+          "action_to_poll": "get_task_status",
+          "params": {
+            "task_id": "${task_result.task_id}"
+          },
+          "save_as": "status_result"
+        },
+        {
+          "action": "return",
+          "value": {
+            "status": "${status_result.status}",
+            "image_urls": "${status_result.result_urls}",
+            "error": "${status_result.error_message}"
+          }
+        }
+      ]
+    }
+  ]
+}
